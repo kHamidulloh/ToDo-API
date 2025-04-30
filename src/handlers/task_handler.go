@@ -8,11 +8,25 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+var allowedStatuses = map[string]bool{
+	"pending":   true,
+	"completed": true,
+}
+
+func isValidStatuses(status string) bool {
+	return allowedStatuses[status]
+}
+
 func CreateTask(c *gin.Context) {
 	var task models.Task
 
 	if err := c.ShouldBindJSON(&task); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if !isValidStatuses(task.Status) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid status. Must be 'pending' or 'completed'"})
 		return
 	}
 
@@ -27,6 +41,11 @@ func CreateTask(c *gin.Context) {
 func GetTasks(c *gin.Context) {
 	var tasks []models.Task
 	status := c.Query("status")
+
+	if !isValidStatuses(status) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid status. Must be 'pending' or 'completed'"})
+		return
+	}
 
 	query := database.DB
 	if status != "" {
@@ -53,6 +72,10 @@ func UpdateTask(c *gin.Context) {
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+
+	if !isValidStatuses(input.Status) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid status. Must be 'pending' or 'completed'"})
 	}
 
 	task.Title = input.Title
