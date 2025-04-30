@@ -4,8 +4,10 @@ import (
 	"net/http"
 	"todo-api/src/database"
 	"todo-api/src/models"
+	"todo-api/src/services"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var allowedStatuses = map[string]bool{
@@ -104,4 +106,88 @@ func DeleteTask(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Task deleted successfully"})
+}
+
+func Register(c *gin.Context) {
+	var request struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+		return
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not hash password"})
+		return
+	}
+
+	user := models.User{
+		Username: request.Username,
+		Password: string(hashedPassword),
+	}
+
+	if err := database.DB.Create(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create user"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"message": "User created successfully"})
+}
+
+func Login(c *gin.Context) {
+	var request struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+		return
+	}
+
+	var user models.User
+
+	if err := database.DB.Where("username = ?", request.Username).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid username or password"})
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password)); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid username or password"})
+		return
+	}
+
+	token, err := services.GenerateJWT(user.Username)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not generate token"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"token": token})
+}
+
+func AuthMiddleware() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		token := ctx.GetHeader("Authorization")
+
+		if token == "" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header missing"})
+			ctx.Abort()
+			return
+		}
+
+		username, err := services.ValidateJWT(token)
+		if err != nil {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			ctx.Abort()
+			return
+		}
+
+		ctx.Set("username", username)
+		ctx.Next()
+
+	}
 }

@@ -7,8 +7,14 @@ import (
 )
 
 func SetupRoutes(router *gin.Engine) {
-	router.POST("/tasks", handlers.CreateTask)
-	router.GET("/tasks", handlers.GetTasks)
-	router.PUT("/tasks/:id", handlers.UpdateTask)
-	router.DELETE("/tasks/:id", handlers.DeleteTask)
+	router.POST("/login", handlers.Login)
+	router.POST("/register", handlers.Register)
+	authorized := router.Group("/")
+	authorized.Use(handlers.AuthMiddleware())
+	{
+		authorized.POST("/tasks", handlers.CreateTask)
+		authorized.GET("/tasks", handlers.GetTasks)
+		authorized.PUT("/tasks/:id", handlers.UpdateTask)
+		authorized.DELETE("/tasks/:id", handlers.DeleteTask)
+	}
 }
