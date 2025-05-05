@@ -32,7 +32,6 @@ func Connect() {
 	if err != nil {
 		log.Fatal("Cannot connect to database: ", err)
 	}
-
-	db.AutoMigrate(&models.Task{})
+	db.AutoMigrate(&models.Task{}, &models.User{})
 	DB = db
 }

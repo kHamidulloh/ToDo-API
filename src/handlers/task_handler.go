@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strings"
 	"todo-api/src/database"
 	"todo-api/src/models"
 	"todo-api/src/services"
@@ -171,13 +172,22 @@ func Login(c *gin.Context) {
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		token := ctx.GetHeader("Authorization")
+		authHeader := ctx.GetHeader("Authorization")
 
-		if token == "" {
+		if authHeader == "" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header missing"})
 			ctx.Abort()
 			return
 		}
+
+		parts := strings.Fields(authHeader)
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Authorization header format"})
+			ctx.Abort()
+			return
+		}
+
+		token := parts[1]
 
 		username, err := services.ValidateJWT(token)
 		if err != nil {

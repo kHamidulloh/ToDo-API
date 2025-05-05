@@ -23,15 +23,15 @@ func GenerateJWT(username string) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenSting, err := token.SignedString(jwtKey)
+	tokenString, err := token.SignedString(jwtKey)
 	if err != nil {
 		return "", err
 	}
-	return tokenSting, nil
+	return tokenString, nil
 }
 
-func ValidateJWT(tokenSting string) (string, error) {
-	token, err := jwt.ParseWithClaims(tokenSting, &Claims{}, func(t *jwt.Token) (interface{}, error) {
+func ValidateJWT(tokenString string) (string, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(t *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
 	})
 
