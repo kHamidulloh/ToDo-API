@@ -27,35 +27,49 @@ This is a simple ToDo REST API built with Golang using the Gin web framework. It
 ```bash
 git clone https://github.com/your-username/todo-api.git
 cd todo-api
+```
 
 2. **Install dependencies**
 
+```bash
 go mod tidy
+```
 
-3. **Create a .env file**
+3. **Create a `.env` file**
 
-Create a file named .env in the root directory and add the following:
+Create a file named `.env` in the root directory and add the following:
 
+```env
 DB_HOST=localhost
 DB_PORT=5432
 DB_USER=postgres
 DB_PASSWORD=your_password
 DB_NAME=todo
+```
 
 4. **Run PostgreSQL locally**
 
-Make sure PostgreSQL is running and the todo database is created:
+Make sure PostgreSQL is running and the `todo` database is created:
 
+```sql
 CREATE DATABASE todo;
+```
 
 5. **Run the project**
 
+```bash
 go run ./src/main.go
+```
 
-API Endpoints
-Auth
-Register a new user
+---
 
+## API Endpoints
+
+### Auth
+
+#### Register a new user
+
+```http
 POST /register
 Content-Type: application/json
 
@@ -63,9 +77,11 @@ Content-Type: application/json
   "username": "admin",
   "password": "password123"
 }
+```
 
-Login
+#### Login
 
+```http
 POST /login
 Content-Type: application/json
 
@@ -73,25 +89,33 @@ Content-Type: application/json
   "username": "admin",
   "password": "password123"
 }
+```
 
 Returns a JWT token:
 
+```json
 {
   "token": "your-jwt-token"
 }
+```
 
-    Use this token in the Authorization header for the following endpoints.
+> Use this token in the `Authorization` header for the following endpoints.
 
-Tasks
+---
 
-All endpoints below require a valid JWT token in the Authorization header.
+### Tasks
+
+All endpoints below require a valid JWT token in the `Authorization` header.
 
 Example:
 
+```http
 Authorization: your-jwt-token
+```
 
-Create a task
+#### Create a task
 
+```http
 POST /tasks
 Content-Type: application/json
 
@@ -100,17 +124,23 @@ Content-Type: application/json
   "description": "Buy 2 liters of milk",
   "status": "pending"
 }
+```
 
-Get tasks
+#### Get tasks
 
+```http
 GET /tasks
+```
 
 You can filter by status:
 
+```http
 GET /tasks?status=completed
+```
 
-Update a task
+#### Update a task
 
+```http
 PUT /tasks/:id
 Content-Type: application/json
 
@@ -119,13 +149,19 @@ Content-Type: application/json
   "description": "Whole grain",
   "status": "completed"
 }
+```
 
-Delete a task
+#### Delete a task
 
+```http
 DELETE /tasks/:id
+```
 
-Folder Structure
+---
 
+## Folder Structure
+
+```
 todo-api/
 │
 ├── src/
@@ -138,7 +174,10 @@ todo-api/
 ├── go.mod
 ├── .env
 └── README.md
+```
 
-License
+---
+
+## License
 
 This project is open source and free to use.
